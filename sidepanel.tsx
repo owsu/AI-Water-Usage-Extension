@@ -14,15 +14,40 @@ function SidePanel() {
   const [waterBottles, setWaterBottles]     = useState(0)
   const [numVariable, setNumVariable]       = useState(0)
 
+  const SHOWER_LITERS = 65
+  const showers = numWaterLiters / SHOWER_LITERS
+
   useEffect(() => {
-    chrome.runtime.onMessage.addListener((message: any) => {
+    const listener = (message: any) => {
       if (message.type === "tokenData") {
-        setNumWaterLiters(message.detail.numWaterLiters)
-        setNumTokens(message.detail.numTokens)
-        setWaterBottles(message.detail.waterBottles)
-        setNumVariable(message.detail.numVariable)
+        setNumWaterLiters(Number(message.detail.numWaterLiters))
+        setNumTokens(Number(message.detail.numTokens))
+        setWaterBottles(Number(message.detail.waterBottles))
+        setNumVariable(Number(message.detail.numVariable))
+        const newWater = Number(message.detail.numWaterLiters)
+        const newTokens = Number(message.detail.numTokens)
+        const newBottles = Number(message.detail.waterBottles)
+        const newLake = Number(message.detail.numVariable)
+
+        setNumWaterLiters(newWater)
+        setNumTokens(newTokens)
+        setWaterBottles(newBottles)
+        setNumVariable(newLake)
+
+        chrome.storage.local.set({
+          numWaterLiters: newWater,
+          numTokens: newTokens,
+          waterBottles: newBottles,
+          lakePercent: newLake
+        })
       }
-    })
+    }
+
+    chrome.runtime.onMessage.addListener(listener)
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(listener)
+    }
   }, [])
 
   function handleWaterAnimationsEvent() {
@@ -36,60 +61,83 @@ function SidePanel() {
   }
 
   return (
-    <>
-      <div className="w-[340px] p-4">
-        <button onClick={handleWaterAnimationsEvent}>
-        Trigger water Animation
-      </button>
-      <p className='waterFalling'></p>
-      <p className='waterfall'></p>
+    // ✅ Changed min-h-full → min-h-screen so gradient fills the entire panel
+    <div className="min-h-screen bg-gradient-to-b from-blue-200 to-blue-50 p-6">
+    <div className="space-y-6">
+
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-bold tracking-tight">
+          AI Water Tracker
+        </h1>
+        <p className="text-gray-500 text-sm">
+          Estimated environmental impact of your AI usage
+        </p>
       </div>
-      <CardProp>
-        <h1 className="text-xl font-semibold mb-1">AI Water Tracker</h1>
-        <div className="text-gray-500 text-s">
-          Tracks estimated water usage from your AI tokens/requests.
+
+      <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-6 text-center transition-transform duration-200 hover:scale-[1.02]">
+        <div className="text-gray-500 text-xs uppercase tracking-wide">
+          Total Water Used
         </div>
-      </CardProp>
-
-      <CardProp>
-        <div className="text-gray-500 text-m">Total water used</div>
-        <div className="text-2xl font-semibold text-blue-500">
-          {numWaterLiters + " L"}
+        <div className="text-4xl font-bold text-blue-600 mt-2">
+          💧 {numWaterLiters.toFixed(4)} L
         </div>
-        <div className="text-gray-500 text-m">{numTokens} tokens</div>
-      </CardProp>
-
-      <CardProp>
-        <div className="text-gray-500 text-sm">Total water bottles consumed</div>
-        <div className="text-3xl font-semibold text-blue-500">{waterBottles}</div>
-      </CardProp>
-
-      <CardProp>
-        <div className="text-gray-500 text-sm text-center">
-          You have used up <span className="font-semibold">{numVariable}</span>% of Lake Mendota.
+        <div className="text-gray-400 text-sm mt-1">
+          {numTokens} tokens
         </div>
-      </CardProp>
+      </div>
 
-      <CardProp>
-        <div className="flex justify-between items-center">
-          <div>
-            <div className="text-gray-500 text-l">History</div>
-            <div className="text-gray-500 text-m">Recent additions</div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow p-5 text-center">
+          <div className="text-gray-500 text-sm">Water Bottles</div>
+          <div className="text-2xl font-semibold text-blue-600 mt-1">
+            {waterBottles}
           </div>
- 
-        </div> 
-      </CardProp>
+      </div>
+        
 
-      <div className="text-m text-gray-700 mb-3">
-        Conversion note: uses liters-per-token multiplier stored locally.
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow p-5 text-center">
+          <div className="text-gray-500 text-sm">Number of 10 Minute Showers</div>
+          <div className="text-2xl font-semibold text-blue-600 mt-1">
+            {showers.toFixed(3)}
+          </div>
+        </div>
+      </div>
+      
+      
+
+        <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow p-5 text-center">
+          <div className="text-gray-500 text-sm">Lake Mendota Used</div>
+          <div className="text-2xl font-semibold text-blue-600 mt-1">
+            {Math.floor(numVariable)}%
+          </div>
+        </div>
       </div>
 
-      <button
-        onClick={openWebpage}
-        className="text-2xl w-full bg-blue-500 text-white px-3 py-2 rounded-lg cursor-pointer text-center">
-        Dashboard
-      </button>  
-    </>
+      <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow p-6">
+        <div className="text-gray-500 text-sm mb-2">
+          Percentage of Lake Mendota
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div
+            className="bg-gradient-to-r from-blue-400 to-blue-600 h-3 transition-all duration-700"
+            style={{ width: `${Math.min(numVariable, 100)}%` }}
+          />
+        </div>
+      </div>
+
+      {/* ✅ Reformatted button: rounder, subtle shadow, better padding, icon added */}
+      <div className="pt-4">
+        <button
+          onClick={openWebpage}
+          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 px-4 rounded-2xl font-semibold text-2xl shadow-md shadow-blue-300/40 transition duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-blue-300/50 active:scale-95"
+        >
+          Open Dashboard
+        </button>
+      </div>
+
+    </div>
+  </div>
   )
 }
 

@@ -31,3 +31,56 @@ This should create a production bundle for your extension, ready to be zipped an
 ## Submit to the webstores
 
 The easiest way to deploy your Plasmo extension is to use the built-in [bpp](https://bpp.browser.market) GitHub action. Prior to using this action however, make sure to build your extension and upload the first version to the store to establish the basic credentials. Then, simply follow [this setup instruction](https://docs.plasmo.com/framework/workflows/submit) and you should be on your way for automated submission!
+
+
+
+sources used:
+https://www.eesi.org/articles/view/data-centers-and-water-consumption
+
+https://www.ceres.org/resources/reports/drained-by-data-the-cumulative-impact-of-data-centers-on-regional-water-stress?utm_source=google-ad-grant&utm_medium=paid&utm_campaign=ceres_evergreen_keywords&utm_term=googleadgrant&gad_source=1&gad_campaignid=15876522884&gbraid=0AAAAADlebsLUm1ToorvSgKtGcAIx8gDr9&gclid=Cj0KCQiA5I_NBhDVARIsAOrqIsZANlHCOIVQkNG3C_Xz9zTsoCb9uyPyMaMIT5xeCv8JBnGW-GBpS9QaAuOnEALw_wcB
+
+https://theconversation.com/ai-has-a-hidden-water-cost-heres-how-to-calculate-yours-263252
+
+## How the Extension Works
+
+The core goal of this project is to estimate the environmental "water cost" of
+using large language models in the browser and present live metrics to the user
+via a sidebar and dashboard.  The implementation consists of three cooperating
+pieces:
+
+(NOTE: the extension only keeps track of your current session, once you exit the extension the data resets.)
+
+1. **Content script (`contents/content.ts`)** – injected into the AI site
+	(ChatGPT) and watches for new response text.  When a
+	block of output finishes, it estimates the number of tokens based on the
+	length of the input/response pair, converts tokens into milliliters of water
+	using per-model rates, and keeps running totals.  Each time a response is
+	processed the script sends a `tokenData` message to the rest of the
+	extension containing:
+	- total tokens seen so far
+	- total water used (liters)
+	- equivalent number of 500 mL water bottles
+	- percentage of Lake Mendota consumed
+
+
+2. **Sidebar panel (`sidepanel.tsx`)** – a React component rendered by Plasmo in
+	the browser sidebar.  It listens for `chrome.runtime` messages from the
+	content script, updates a small state object, and displays the latest
+	metrics.  A couple of short-lived CSS animations (waterfall / water-falling)
+	play whenever new data arrives.  A button opens the full dashboard in a new
+	tab.
+
+3. **Dashboard page (`tabs/dashboard.tsx`)** – another React view that shows the
+	same data but with richer formatting, time filters, and counters.
+	It also listens for `tokenData` events and multiplies the raw totals by a
+	multiplier to demonstrate multiple users with your inputs to demonstrate the 
+    impact of many people on water consumption.
+
+Additionally, a minimal `background.js` toggles the sidebar when the extension
+icon is clicked, and a couple of shared components (`components/card.tsx` and
+`components/metriccard.tsx`) handle reusable card styles.
+
+The majority of the logic lives in the content script; the UI layers simply
+display whatever numbers are sent by the background logic.  This separation
+keeps the metrics calculation independent of the presentation and makes it easy
+to extend or port to other UIs later.
