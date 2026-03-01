@@ -1,10 +1,10 @@
 .waterfalling{
     position: fixed;
-    top: 100;
-    left: 0;
+    top: 0;
+    right: 50%;
     width: 25%;
     height: 0;
-    z-index: 1;
+    z-index: -9;
     background-color: rgb(34, 53, 53);
     animation: 4s waterfalling linear alternate;
 

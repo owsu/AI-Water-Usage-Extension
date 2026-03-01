@@ -2,31 +2,33 @@ import {useState, useEffect} from 'react';
 import CardProp from 'components/card';
 import "./style.css"
 import "waterfall-animation.css"
-import "water-animation.css"
+import "waterFalling-animation.css"
 
 
 function SidePanel() {
-  const [water, setShowWater] = useState(false);
+  const [showWaterFalling, setShowWaterFalling] = useState(false);
   const [showWaterfall, setShowWaterfall] = useState(false);
 
-  const [numWaterLiters, setNumWaterLiters] = useState("0")
+  const [numWaterLiters, setNumWaterLiters] = useState(0)
   const [numTokens, setNumTokens]           = useState(0)
-  const [waterBottles, setWaterBottles]     = useState("0")
-  const [numVariable, setNumVariable]       = useState("0")
+  const [waterBottles, setWaterBottles]     = useState(0)
+  const [numVariable, setNumVariable]       = useState(0)
 
   useEffect(() => {
-    window.addEventListener("tokenData", (e: any) => {
-      setNumWaterLiters(e.detail.numWaterLiter)
-      setNumTokens(e.detail.numTokens)
-      setWaterBottles(e.detail.waterBottles)
-      setNumVariable(e.detail.numVariable)
+    chrome.runtime.onMessage.addListener((message: any) => {
+      if (message.type === "tokenData") {
+        setNumWaterLiters(message.detail.numWaterLiters)
+        setNumTokens(message.detail.numTokens)
+        setWaterBottles(message.detail.waterBottles)
+        setNumVariable(message.detail.numVariable)
+      }
     })
   }, [])
 
-  function handleWaterEvent() {
+  function handleWaterAnimationsEvent() {
     setShowWaterfall(true);
-    setShowWater(true);
-    setTimeout(() => {setShowWater(false); setShowWaterfall(false);}, 5000);
+    setShowWaterFalling(true);
+    setTimeout(() => {setShowWaterFalling(false); setShowWaterfall(false);}, 5000);
   }
 
   function openWebpage() {
@@ -36,12 +38,12 @@ function SidePanel() {
   return (
     <>
       <div className="w-[340px] p-4">
-        <button onClick={handleWaterEvent}>
+        <button onClick={handleWaterAnimationsEvent}>
         Trigger water Animation
       </button>
-      </div>
+      <p className='waterFalling'></p>
       <p className='waterfall'></p>
-      <p className='water'></p>
+      </div>
       <CardProp>
         <h1 className="text-xl font-semibold mb-1">AI Water Tracker</h1>
         <div className="text-gray-500 text-s">

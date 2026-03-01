@@ -13,10 +13,10 @@ const WATER_RATES: Record<string, number> = {
 }
 
 const SELECTORS: Record<string, string> = {
-  chatgpt: '.markdown',
+  chatgpt: '.prose',
   claude:  '.prose',
   gemini:  '.response-content',
-  default: '.markdown'
+  default: '.prose'
 }
 
 function detectSite(): string {
@@ -67,19 +67,15 @@ function processResponse(element: Element, inputText: string) {
   console.log('  Session tokens: ' + totalTokens)
   console.log('  Session water:  ' + totalWaterLiters.toFixed(6) + ' L')
 
-  window.dispatchEvent(new CustomEvent('tokenData', {
+  chrome.runtime.sendMessage({
+    type: "tokenData",
     detail: {
       numWaterLiters: totalWaterLiters.toFixed(4),
       numTokens: totalTokens,
       waterBottles: waterBottles.toFixed(2),
       numVariable: mendotaPercent.toExponential(4),
-      site: SITE,
-      inputTokens,
-      outputTokens,
-      preview: outputText.slice(0, 80),
-      timestamp: Date.now()
     }
-  }))
+  })
 }
 
 function getLastUserInput(): string {
@@ -122,15 +118,14 @@ const observer = new MutationObserver((mutations) => {
     mutation.addedNodes.forEach(node => {
       if (node.nodeType !== Node.ELEMENT_NODE) return
       const el = node as Element
-      if (el.matches && el.matches(selector)) {
-        watchForCompletion(el)
-        return
-      }
-      const nested = el.querySelector && el.querySelector(selector)
-      if (nested) watchForCompletion(nested)
+      // also search upward for already-present containers
+      const target = el.matches(selector) ? el : el.querySelector(selector)
+      if (target) watchForCompletion(target)
     })
   })
 })
+
+observer.observe(document.body, { childList: true, subtree: true })
 
 observer.observe(document.body, { childList: true, subtree: true })
 console.log('[Token Tracker] Watching for responses using selector: ' + selector)
