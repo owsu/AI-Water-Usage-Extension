@@ -1,0 +1,24 @@
+.waterfalling{
+    position: fixed;
+    top: 100;
+    left: 0;
+    width: 25%;
+    height: 0;
+    z-index: 1;
+    background-color: rgb(34, 53, 53);
+    animation: 4s waterfalling linear alternate;
+
+}
+@keyframes waterfalling {
+    0% {
+        height: 0;
+    }
+    50% {
+        width: 30%;
+        height: 50%;
+    }
+    100% {
+        width: 25%;
+        height: 100%;
+    }
+}
