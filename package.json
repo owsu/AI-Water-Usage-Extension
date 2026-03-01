@@ -1,8 +1,8 @@
 {
-  "name": "CheeseHacks",
-  "displayName": "Cheese hacks",
+  "name": "AWU Tracker",
+  "displayName": "AWU Tracker",
   "version": "0.0.1",
-  "description": "A water usage tracker for AI tools",
+  "description": "A conscious water usage tracker for AI tools such as Chatgpt.",
   "author": "kantankah@wisc.edu",
   "scripts": {
     "dev": "plasmo dev --target=firefox-mv2",
@@ -31,7 +31,7 @@
       "128": "../assets/icon.png"
     },
     "browser_action": {
-      "default_title": "Water Tracker"
+      "default_title": "AWU Tracker"
     },
     "sidebar_action": {
       "default_panel": "sidepanel.html",
